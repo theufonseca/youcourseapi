@@ -1,5 +1,6 @@
 ﻿using Application.Models;
 using Application.Repositories;
+using Application.Services.NotifyService;
 using Domain.Entities.CourseAggregate;
 using MediatR;
 using System;
@@ -22,10 +23,12 @@ namespace Application.UseCases.CourseUseCases
     public class CreateCourseHandler : IRequestHandler<CreateCourseRequest, CreateCourseResponse>
     {
         private readonly ICourseRepository courseRepository;
+        private readonly INotifyChangeService notifyChangeService;
 
-        public CreateCourseHandler(ICourseRepository courseRepository)
+        public CreateCourseHandler(ICourseRepository courseRepository, INotifyChangeService notifyChangeService)
         {
             this.courseRepository = courseRepository;
+            this.notifyChangeService = notifyChangeService;
         }
 
         public async Task<CreateCourseResponse> Handle(CreateCourseRequest request, CancellationToken cancellationToken)
@@ -42,6 +45,7 @@ namespace Application.UseCases.CourseUseCases
             };
 
             var courseId = await courseRepository.Create(course);
+            await notifyChangeService.NotifyCourseChangeAsync(courseId, NotifyOperationEnum.Create);
 
             return new CreateCourseResponse(courseId);
         }

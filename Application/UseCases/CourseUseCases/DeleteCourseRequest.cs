@@ -1,4 +1,5 @@
 ﻿using Application.Repositories;
+using Application.Services.NotifyService;
 using MediatR;
 using System;
 using System.Collections.Generic;
@@ -15,15 +16,18 @@ namespace Application.UseCases.CourseUseCases
     public class DeleteCourseRequestHandler : IRequestHandler<DeleteCourseRequest, DeleteCourseResponse>
     {
         private readonly ICourseRepository courseRepository;
+        private readonly INotifyChangeService notifyChangeService;
 
-        public DeleteCourseRequestHandler(ICourseRepository courseRepository)
+        public DeleteCourseRequestHandler(ICourseRepository courseRepository, INotifyChangeService notifyChangeService)
         {
             this.courseRepository = courseRepository;
+            this.notifyChangeService = notifyChangeService;
         }
 
         public async Task<DeleteCourseResponse> Handle(DeleteCourseRequest request, CancellationToken cancellationToken)
         {
             await courseRepository.Delete(request.Id);
+            await notifyChangeService.NotifyCourseChangeAsync(request.Id, NotifyOperationEnum.Delete);
             return new DeleteCourseResponse();
         }
     }

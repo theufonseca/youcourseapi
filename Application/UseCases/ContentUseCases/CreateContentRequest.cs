@@ -1,4 +1,5 @@
 ﻿using Application.Repositories;
+using Application.Services.NotifyService;
 using Domain.Entities.CourseAggregate;
 using Domain.Enums;
 using MediatR;
@@ -23,10 +24,12 @@ namespace Application.UseCases.ContentUseCases
     public class CreateContentRequestHandler : IRequestHandler<CreateContentRequest, CreateContentResponse>
     {
         private readonly IContentRepository contentRepository;
+        private readonly INotifyChangeService notifyChangeService;
 
-        public CreateContentRequestHandler(IContentRepository contentRepository)
+        public CreateContentRequestHandler(IContentRepository contentRepository, INotifyChangeService notifyChangeService)
         {
             this.contentRepository = contentRepository;
+            this.notifyChangeService = notifyChangeService;
         }
 
         public async Task<CreateContentResponse> Handle(CreateContentRequest request, CancellationToken cancellationToken)
@@ -42,6 +45,7 @@ namespace Application.UseCases.ContentUseCases
             };
 
             var id = await contentRepository.Create(content);
+            await notifyChangeService.NotifyContentChangeAsync(id, NotifyOperationEnum.Create);
 
             return new CreateContentResponse(id);
         }

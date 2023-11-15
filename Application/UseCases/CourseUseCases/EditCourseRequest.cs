@@ -1,5 +1,6 @@
 ﻿using Application.Models;
 using Application.Repositories;
+using Application.Services.NotifyService;
 using Domain.Entities.CourseAggregate;
 using MediatR;
 using System;
@@ -23,10 +24,12 @@ namespace Application.UseCases.CourseUseCases
     public class EditCourseRequestHandler : IRequestHandler<EditCourseRequest, EditCourseResponse>
     {
         private readonly ICourseRepository _courseRepository;
+        private readonly INotifyChangeService notifyChangeService;
 
-        public EditCourseRequestHandler(ICourseRepository courseRepository)
+        public EditCourseRequestHandler(ICourseRepository courseRepository, INotifyChangeService notifyChangeService)
         {
             _courseRepository = courseRepository;
+            this.notifyChangeService = notifyChangeService;
         }
 
         public async Task<EditCourseResponse> Handle(EditCourseRequest request, CancellationToken cancellationToken)
@@ -50,7 +53,9 @@ namespace Application.UseCases.CourseUseCases
 
             if(request.IsActive)
                 course.IsActive = request.IsActive;
-            
+
+            await notifyChangeService.NotifyCourseChangeAsync(course.Id, NotifyOperationEnum.Update);
+
             return new EditCourseResponse(course);
         }
     }

@@ -1,4 +1,5 @@
 ﻿using Application.Repositories;
+using Application.Services.NotifyService;
 using Domain.Entities.CourseAggregate;
 using Domain.Enums;
 using MediatR;
@@ -23,10 +24,12 @@ namespace Application.UseCases.ContentUseCases
     public class EditContentRequestHandler : IRequestHandler<EditContentRequest, EditContentResponse>
     {
         private readonly IContentRepository contentRepository;
+        private readonly INotifyChangeService notifyChangeService;
 
-        public EditContentRequestHandler(IContentRepository contentRepository)
+        public EditContentRequestHandler(IContentRepository contentRepository, INotifyChangeService notifyChangeService)
         {
             this.contentRepository = contentRepository;
+            this.notifyChangeService = notifyChangeService;
         }
 
         public async Task<EditContentResponse> Handle(EditContentRequest request, CancellationToken cancellationToken)
@@ -53,6 +56,7 @@ namespace Application.UseCases.ContentUseCases
                 content.IsVisible = request.IsVisible.Value;
 
             await contentRepository.Update(content);
+            await notifyChangeService.NotifyContentChangeAsync(content.Id, NotifyOperationEnum.Update);
 
             return new EditContentResponse(content);
         }

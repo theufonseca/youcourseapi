@@ -1,5 +1,6 @@
 ﻿using Application.Models;
 using Application.Repositories;
+using Application.Services.NotifyService;
 using Domain.Entities.CourseAggregate;
 using MediatR;
 using System;
@@ -16,9 +17,12 @@ namespace Application.UseCases.TrailUseCases
     public class EditTrailRequestHandler : IRequestHandler<EditTrailRequest, EditTrailResponse>
     {
         private readonly ITrailRepository trailRepository;
-        public EditTrailRequestHandler(ITrailRepository trailRepository)
+        private readonly INotifyChangeService notifyChangeService;
+
+        public EditTrailRequestHandler(ITrailRepository trailRepository, INotifyChangeService notifyChangeService)
         {
             this.trailRepository = trailRepository;
+            this.notifyChangeService = notifyChangeService;
         }
         public async Task<EditTrailResponse> Handle(EditTrailRequest request, CancellationToken cancellationToken)
         {
@@ -37,6 +41,8 @@ namespace Application.UseCases.TrailUseCases
                 trail.IsVisible = request.IsVisible.Value;
 
             await trailRepository.Update(trail);
+
+            await notifyChangeService.NotifyTrailChangeAsync(trail.Id, NotifyOperationEnum.Update);
 
             return new EditTrailResponse(trail);
         }

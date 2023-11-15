@@ -3,6 +3,7 @@ using Infra.Data;
 using Infra.Data.Repositories;
 using Infra.ElasticSearch;
 using Infra.ElasticSearch.Repositories;
+using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -97,6 +98,17 @@ builder.Services.AddTransient<IViewedRepository, ViewedRepository>();
 //Elasticsearch
 builder.Services.AddElasticSearch(builder.Configuration);
 builder.Services.AddTransient<ICourseIndex, CourseIndex>();
+
+//RabbitMQ
+builder.Services.AddMassTransit(bus =>
+{
+    bus.UsingRabbitMq((context, cfg) =>
+    {
+        cfg.Host(builder.Configuration.GetConnectionString("RabbitMq"));
+    });
+});
+
+builder.Services.AddMassTransitHostedService();
 
 var app = builder.Build();
 
